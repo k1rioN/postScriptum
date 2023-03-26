@@ -15,11 +15,8 @@ export default function Messages({navigation}) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fddbb8",
-    marginTop: 10,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
+    backgroundColor: "#6E8898FF",
+    marginTop: 5,
     shadowColor: 'black',
-    marginHorizontal: 5
   },
 });

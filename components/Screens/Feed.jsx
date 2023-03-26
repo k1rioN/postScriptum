@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect  } from "react";
-import { StyleSheet, Dimensions, Text, View, Modal, FlatList, TouchableOpacity, TextInput, KeyboardAvoidingView } from 'react-native';
-import { addDoc, collection, doc } from 'firebase/firestore'
+import { StyleSheet, StatusBar, Text, View, Modal, FlatList, TouchableOpacity, TextInput, KeyboardAvoidingView, Alert } from 'react-native';
+import { addDoc, collection, doc, Firestore } from 'firebase/firestore'
 import { database, auth } from "../../firebase";
 import { async } from "@firebase/util";
 import { getDocs } from 'firebase/firestore'
 import moment from 'moment'
 import { LogBox } from 'react-native';
+import * as ImagePicker from 'expo-image-picker'
+import AppLoader from "./AppLoader";
 LogBox.ignoreLogs(['Warning: ...']);
 LogBox.ignoreAllLogs();
 
@@ -14,64 +16,62 @@ export default function Feed({navigation}) {
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [postList, setPostList] = useState([]);
-  const [imageUpload, setImageUpload] = useState();
+  const [loginPending, setLoginPending] = useState(false);
   const lastNameRef = useRef();
-  const { width, height } = Dimensions.get('window')
-  const ITEM_SIZE = height / 100 * 72;
 
   useEffect(() => {
+    setLoginPending(true)
     const getPosts = async () => {
       const data = await getDocs(postCollectionRef);
       setPostList(data.docs.map((doc) => ({...doc.data(), id: doc.id})))
+      setLoginPending(false)
     };
     const interval = setInterval(() => {
       getPosts();
     }, 1000)
   return () => clearInterval(interval)
+  
   }, [])
 
-  const postContainer = {
-    padding: 20,
-    margin: 0,
-    marginHorizontal: 2,
-    height: ITEM_SIZE,
-    backgroundColor: "#c8d9ed",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    marginTop: 3
-  }
-
   const postView = {
-    height: ITEM_SIZE,
+    height: '100%',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     borderBottomEndRadius: 30,
     marginHorizontal: 6,
+    backgroundColor: "#6E8898FF"
   }
-  
 
   const postCollectionRef = collection(database, "posts")
-  const createPost = async () => {
-    let datetime = moment().format(); 
-    await addDoc(postCollectionRef, {title, text, author: {date: datetime, name: auth.currentUser.email, id: auth.currentUser.uid}}),
-    setModalVisible(!modalVisible),
-    setTitle(""),
-    setText("")
+
+  const createPost = async (url) => {
+    if(title !== "" && text !== "") {
+      let datetime = moment().format(); 
+      await addDoc(postCollectionRef, {title, text, author: {date: datetime, name: auth.currentUser.email, id: auth.currentUser.uid}}),
+      setModalVisible(!modalVisible),
+      setLoginPending(true)
+      setTitle(""),
+      setText("")
+    }
+    else {
+      Alert.alert("Заполните все поля")
+    }
   }
 
   return (
+    <>
     <View style={styles.container} onPress={() => setModalVisible(!modalVisible)}>
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
+        keyboardShouldPersistTaps={'always'}
         >
+          <>
           <View style={styles.centeredView}>
-            <View style={styles.modalView}>
-              <TouchableOpacity style={styles.closebutton} onPress={() => setModalVisible(false)}>
-                <Text style={{fontWeight: 'bold', color: '#30475E', fontSize: 17}}>Закрыть</Text>
+            <View style={styles.modalView} keyboardShouldPersistTaps='handled'>
+              <TouchableOpacity keyboardShouldPersistTaps='handled' style={styles.closebutton} onPress={() => setModalVisible(false)}>
+                <Text keyboardShouldPersistTaps='handled' style={{fontWeight: 'bold', color: '#30475E', fontSize: 17}}>Закрыть</Text>
               </TouchableOpacity>
               <Text style={{fontSize: 24, marginTop: 25, marginBottom: 10}}>Заголовок</Text>
               <TextInput 
@@ -99,43 +99,56 @@ export default function Feed({navigation}) {
               </TouchableOpacity>
             </View>
           </View>
+          </>
       </Modal>
       <TouchableOpacity style={styles.button} onPress={() => setModalVisible(!modalVisible)}>
         <Text style={{fontWeight: 'bold', color: '#ffffff', fontSize: 22}}>+</Text>
       </TouchableOpacity>
       <View style={postView}>
-        <FlatList data={postList} snapToInterval={ITEM_SIZE + 3} decelerationRate={0} renderItem={({item}) => (
-        <View style={postContainer}>
+        <FlatList data={postList} renderItem={({item}) => (
+        <View 
+          style={{
+            padding: 20,
+            margin: 0,
+            height: 200,
+            backgroundColor: "#9FB1BCFF",
+            borderTopLeftRadius: 30,
+            borderTopRightRadius: 30,
+            borderBottomLeftRadius: 30,
+            borderBottomRightRadius: 30,
+            flexDirection: 'column', 
+            marginBottom: 5
+          }}>
           <Text style={styles.title} >{ item.title }</Text>
           <Text style={styles.text}>{ item.text }</Text>
         </View>
       )} />
       </View>
     </View>
+    {loginPending ?  <AppLoader /> : null}
+    <StatusBar barStyle={"light-content"} translucent={true}/>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#fddbb8",
-    marginTop: 11,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    borderBottomRightRadius: 40,
-    borderBottomLeftRadius: 40,
+    backgroundColor: "#6E8898FF",
+    marginTop: 5,
     shadowColor: 'black',
-    marginHorizontal: 6,
-    height: "100%"
+    height: "100%",
+    borderTopRightRadius: 30,
+    borderTopLeftRadius: 30
   },
   centeredView: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-end',
-    zIndex: 1000
+    zIndex: 1000,
   },
-  
+
   modalView: {
-    backgroundColor: 'white',
+    backgroundColor: '#6E8898FF',
     borderRadius: 30,
     padding: 10,
     alignItems: 'center',
@@ -151,8 +164,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    height: "82%",
-    width: "98%",
+    height: "83%",
+    width: "100%",
   },
   input: {
     backgroundColor: "#E7E7E7",
@@ -173,28 +186,34 @@ const styles = StyleSheet.create({
     padding: 15,
     paddingTop: 10
   },
+  colorPickerContainer: {
+    height: 100,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 10,
-    color: "#1F2421"
+    color: "#1F2421",
   },
   text: {
     fontSize: 18,
-    color: "#1F2421"
+    color: "#1F2421",
+    marginTop: 15,
+    marginBottom: 15
   },
   button: {
-    backgroundColor: '#0976d1',
+    backgroundColor: '#78A2CC',
     height: 50,
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 7,
     marginHorizontal: 7,
-    marginBottom: 7
+    marginBottom: 10,
+    marginTop: 7
   },
   closebutton: {
-    backgroundColor: '#fddbb8',
+    backgroundColor: '#F8858B',
     height: 50,
     borderRadius: 30,
     justifyContent: 'center',
@@ -205,13 +224,16 @@ const styles = StyleSheet.create({
     zIndex: 1000
   },
   saveButton: {
-    backgroundColor: '#0976d1',
+    backgroundColor: '#78A2CC',
     height: 50,
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 0,
     width: "100%",
     marginHorizontal: 12,
+    marginTop: 15
   }
 });
+
+

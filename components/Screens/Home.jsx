@@ -1,6 +1,6 @@
 import { auth } from "../../firebase"
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { signOut } from "firebase/auth";
 import Swiper from "react-native-screens-swiper";
@@ -32,11 +32,12 @@ export default function Home({ navigation }) {
   const styless = {
     pillContainer: {
       alignItems: 'center',
-      paddingTop: 8,
-      paddingHorizontal: 2
+      paddingHorizontal: 2,
+      marginTop: 10,
+      marginBottom: 5
     },
     pillActive: {
-      backgroundColor: '#0976d1',
+      backgroundColor: '#78A2CC',
       color: 'black'
     },
     pillButton: {
@@ -48,12 +49,12 @@ export default function Home({ navigation }) {
       borderBottomLeftRadius: 30,
       position: 'fixed',
       scrollableContainer: false,
-      backgroundColor: '#F6F8FF',
+      backgroundColor: '#9FB1BCFF',
       color: '#30475E'
     },
     borderActive: {
       borderColor: 'black',
-      backgroundColor: '#37648d'
+      backgroundColor: 'white'
     },
     pillLabel: {
       color: 'gray',
@@ -68,14 +69,15 @@ export default function Home({ navigation }) {
   };
   
   return (
+    <>
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleSingOut}>
-          <Ionicons name="md-exit" size={32} color="#fddbb8" />
+          <Ionicons name="md-exit" size={34} color="#FD706B" />
         </TouchableOpacity>
         <Text style={styles.title}>ПостСкриптум</Text>
         <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
-          <Ionicons name="md-person" size={32} color="#a2d4ed" />
+          <Ionicons name="md-person" size={30} color="#708090" />
         </TouchableOpacity>
       </View>
       <View style={styles.content}>
@@ -87,34 +89,36 @@ export default function Home({ navigation }) {
           />
       </View>
     </View>
+    <StatusBar barStyle={"dark-content"} translucent={true}/>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#2E5266FF',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 60,
-    backgroundColor: '#F0997D',
+    paddingTop: 50,
+    backgroundColor: '#2E5266FF',
+    marginTop: 5,
+    
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#514e4c',
+    color: '#D3D3D3',
   },
   content: {
     width: '100%',
     height: '90%',
     position: "absolute",
     bottom: 0,
-    backgroundColor: 'white',
-    paddingTop: 5,
+    backgroundColor: '#2E5266FF',
     justifyContent: 'center',
-    backgroundColor: '#F0997D',
   },
 });

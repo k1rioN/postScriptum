@@ -4,13 +4,13 @@ import Home from './components/Screens/Home'
 import Profile from './components/Screens/Profile'
 import Auth from './components/Screens/Auth'
 import Reg from './components/Screens/Reg'
-import Post from "./components/Posts/Post";
 import { isAuthStateChanged } from 'firebase/auth'
 
 
 import { createStackNavigator } from "@react-navigation/stack";
 import { NavigationContainer } from "@react-navigation/native";
 import { back } from "react-native/Libraries/Animated/Easing";
+import AppLoader from "./components/Screens/AppLoader";
 
 const Stack = createStackNavigator();
 
@@ -84,24 +84,6 @@ export default function Navigate({ navigation }) {
                         headerTitleStyle: {
                             color: 'black',
                             fontSize: 24,
-                        },
-                        headerBackTitleVisible: false,
-                    }
-                }
-            />
-            <Stack.Screen 
-                name="Post"
-                component={Post}
-                options={
-                    {
-                        title: 'Пост',
-                        headerStyle: {
-                            height: 100,
-                            backgroundColor: 'white',
-                        },
-                        headerTitleStyle: {
-                            color: 'black',
-                            fontSize: 23,
                         },
                         headerBackTitleVisible: false,
                     }

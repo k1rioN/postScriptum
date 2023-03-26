@@ -1,15 +1,20 @@
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import React, { useEffect, useState } from 'react';
-import { StatusBar, TouchableWithoutFeedback, View, TextInput, StyleSheet, TouchableOpacity, Text, Alert, Image, SafeAreaView } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { StatusBar, TouchableWithoutFeedback, View, TextInput, StyleSheet, TouchableOpacity, Text, Alert, Image, SafeAreaView, Animated } from 'react-native';
 import KeyboardAvoidingView, { KeyboardAvoidingViewComponent } from 'react-native/Libraries/Components/Keyboard/KeyboardAvoidingView';
 import { auth } from '../../firebase'
 import { Keyboard } from 'react-native'
+import AppLoader from './AppLoader';
+import { useFocusEffect } from '@react-navigation/native';
+import { useIsFocused } from "@react-navigation/native";
+
 
 const backImage = require('../../assets/Rectangle.jpg')
 
 export default function LoginPage({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
 
   const handleLogin = () => {
     if(email !== "" && password !== "") {
@@ -18,8 +23,20 @@ export default function LoginPage({ navigation }) {
       .catch((err) => Alert.alert("Login error", err.message));
     }
   };
+  const keyboardOffset = useRef(new Animated.Value(10)).current;
+
+  const startAnimation = (toValue) => Animated.timing(keyboardOffset, { toValue, duration: 400, useNativeDriver: true }).start();
+
+
+
 
   useEffect(() => {
+    Keyboard.addListener("keyboardWillShow", () => {
+      startAnimation(-80);
+    });
+      Keyboard.addListener("keyboardWillHide", () => {
+      startAnimation(0);
+    });
     const unsubscribe = auth.onAuthStateChanged(user => {
       if(user){
         navigation.navigate("Home")
@@ -35,12 +52,13 @@ export default function LoginPage({ navigation }) {
   };
 
   return (
+    <>
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
     <View style={styles.container}>
       <Image source={backImage} style={styles.backImage} />
-      <View style={styles.whiteSheet} onPress={() => Keyboard.dismiss()}/>
-      <SafeAreaView style={styles.form} onPress={() => Keyboard.dismiss()}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <View style={styles.whiteSheet}/>
+      <SafeAreaView style={styles.form}>
+      <Animated.View style={{ transform: [{ translateY: keyboardOffset }] }}>
         <Text style={styles.title}>Вход</Text>
          <TextInput
           style={styles.input}
@@ -66,17 +84,18 @@ export default function LoginPage({ navigation }) {
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={{fontWeight: 'bold', color: '#fff', fontSize: 18}}>Войти</Text>
       </TouchableOpacity>
+      </Animated.View>
       <View style={{marginTop: 40, flexDirection: 'row', alignItems: 'center', alignSelf: 'center'}}>
         <Text style={{color: 'gray', fontWeight: '600', fontSize: 15}}>Впервые в ПостСкриптум?? </Text>
         <TouchableOpacity onPress={moveToReg}>
           <Text style={{color: '#5687a6', fontWeight: '600', fontSize: 15}}>Зарегистрироваться</Text>
         </TouchableOpacity>
       </View>
-      </KeyboardAvoidingView>
       </SafeAreaView>
       <StatusBar barStyle="light-content" />
     </View>
     </TouchableWithoutFeedback>
+    </>
   );
 }
 const styles = StyleSheet.create({
