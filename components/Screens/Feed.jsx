@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect  } from "react";
-import { StyleSheet, StatusBar, Text, View, Modal, FlatList, TouchableOpacity, TextInput, KeyboardAvoidingView, Alert } from 'react-native';
+import { StyleSheet, StatusBar, Text, RefreshControl, View, Modal, FlatList, TextInput, KeyboardAvoidingView, Alert } from 'react-native';
 import { addDoc, collection, doc, Firestore } from 'firebase/firestore'
 import { database, auth } from "../../firebase";
 import { async } from "@firebase/util";
@@ -8,16 +8,25 @@ import moment from 'moment'
 import { LogBox } from 'react-native';
 import * as ImagePicker from 'expo-image-picker'
 import AppLoader from "./AppLoader";
+import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
 LogBox.ignoreLogs(['Warning: ...']);
 LogBox.ignoreAllLogs();
 
 export default function Feed({navigation}) {
   const [modalVisible, setModalVisible] = useState(false);
-  const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [postList, setPostList] = useState([]);
   const [loginPending, setLoginPending] = useState(false);
+  const [refreshing, setRefreshing] = React.useState(false);
   const lastNameRef = useRef();
+  
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  }, []);
 
   useEffect(() => {
     setLoginPending(true)
@@ -35,19 +44,18 @@ export default function Feed({navigation}) {
 
   const postView = {
     height: '100%',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    borderBottomEndRadius: 30,
-    marginHorizontal: 6,
-    backgroundColor: "#6E8898FF"
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    backgroundColor: "#ffffff",
+    paddingBottom: 100
   }
 
   const postCollectionRef = collection(database, "posts")
 
   const createPost = async (url) => {
-    if(title !== "" && text !== "") {
+    if(text !== "") {
       let datetime = moment().format(); 
-      await addDoc(postCollectionRef, {title, text, author: {date: datetime, name: auth.currentUser.email, id: auth.currentUser.uid}}),
+      await addDoc(postCollectionRef, {text, author: {date: datetime, name: auth.currentUser.email, id: auth.currentUser.uid}}),
       setModalVisible(!modalVisible),
       setLoginPending(true)
       setTitle(""),
@@ -61,30 +69,18 @@ export default function Feed({navigation}) {
   return (
     <>
     <View style={styles.container} onPress={() => setModalVisible(!modalVisible)}>
+      
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        keyboardShouldPersistTaps={'always'}
         >
           <>
           <View style={styles.centeredView}>
-            <View style={styles.modalView} keyboardShouldPersistTaps='handled'>
-              <TouchableOpacity keyboardShouldPersistTaps='handled' style={styles.closebutton} onPress={() => setModalVisible(false)}>
-                <Text keyboardShouldPersistTaps='handled' style={{fontWeight: 'bold', color: '#30475E', fontSize: 17}}>Закрыть</Text>
+            <View style={styles.modalView}>
+              <TouchableOpacity style={styles.closebutton} onPress={() => setModalVisible(false)}>
+                <Text style={{fontWeight: 'bold', color: '#30475E', fontSize: 17}}>Закрыть</Text>
               </TouchableOpacity>
-              <Text style={{fontSize: 24, marginTop: 25, marginBottom: 10}}>Заголовок</Text>
-              <TextInput 
-                style={styles.input}
-                autoCorrect={false}
-                autoFocus={true}
-                onSubmitEditing={() => {
-                  lastNameRef.current.focus();
-                }}
-                blurOnSubmit={false}
-                onChangeText={(text) => setTitle(text)}
-                value={title}
-              />
               <Text style={{fontSize: 24, marginTop: 20, marginBottom: 10}}>Текст поста</Text>
               <TextInput
                 style={styles.inputArea}
@@ -93,6 +89,7 @@ export default function Feed({navigation}) {
                 ref={lastNameRef}
                 onChangeText={(text) => setText(text)}
                 value={text}
+                autoFocus={true}
               />
               <TouchableOpacity style={styles.saveButton} onPress={createPost}>
                 <Text style={{fontWeight: 'bold', color: '#fff', fontSize: 17}}>Опубликовать</Text>
@@ -104,26 +101,28 @@ export default function Feed({navigation}) {
       <TouchableOpacity style={styles.button} onPress={() => setModalVisible(!modalVisible)}>
         <Text style={{fontWeight: 'bold', color: '#ffffff', fontSize: 22}}>+</Text>
       </TouchableOpacity>
-      <View style={postView}>
+      <ScrollView style={postView} refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }>
         <FlatList data={postList} renderItem={({item}) => (
         <View 
           style={{
             padding: 20,
             margin: 0,
-            height: 200,
+            height: 150,
             backgroundColor: "#9FB1BCFF",
-            borderTopLeftRadius: 30,
-            borderTopRightRadius: 30,
-            borderBottomLeftRadius: 30,
-            borderBottomRightRadius: 30,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            borderBottomLeftRadius: 20,
+            borderBottomRightRadius: 20,
             flexDirection: 'column', 
             marginBottom: 5
-          }}>
-          <Text style={styles.title} >{ item.title }</Text>
+          }} >
+          <Text style={styles.title} >{ item.author.name }</Text>
           <Text style={styles.text}>{ item.text }</Text>
         </View>
       )} />
-      </View>
+      </ScrollView>
     </View>
     {loginPending ?  <AppLoader /> : null}
     <StatusBar barStyle={"light-content"} translucent={true}/>
@@ -133,12 +132,12 @@ export default function Feed({navigation}) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#6E8898FF",
+    backgroundColor: "#ffffff",
     marginTop: 5,
     shadowColor: 'black',
     height: "100%",
-    borderTopRightRadius: 30,
-    borderTopLeftRadius: 30
+    borderTopRightRadius: 20,
+    borderTopLeftRadius: 20
   },
   centeredView: {
     flex: 1,
@@ -148,8 +147,8 @@ const styles = StyleSheet.create({
   },
 
   modalView: {
-    backgroundColor: '#6E8898FF',
-    borderRadius: 30,
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
     padding: 10,
     alignItems: 'center',
     shadowColor: '#000',
@@ -164,17 +163,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    height: "83%",
+    height: "82%",
     width: "100%",
-  },
-  input: {
-    backgroundColor: "#E7E7E7",
-    height: 50,
-    width: "100%",
-    marginHorizontal: 12,
-    fontSize: 16,
-    borderRadius: 30,
-    padding: 13,
   },
   inputArea: {
     backgroundColor: "#E7E7E7",
@@ -210,18 +200,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: 7,
     marginBottom: 10,
-    marginTop: 7
+    marginTop: 10,
   },
   closebutton: {
-    backgroundColor: '#F8858B',
+    backgroundColor: '#88A795',
     height: 50,
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 5,
-    width: "100%",
+    width: 380,
     marginHorizontal: 12,
-    zIndex: 1000
   },
   saveButton: {
     backgroundColor: '#78A2CC',
@@ -232,7 +221,8 @@ const styles = StyleSheet.create({
     marginTop: 0,
     width: "100%",
     marginHorizontal: 12,
-    marginTop: 15
+    marginTop: 15,
+    width: 380,
   }
 });
 

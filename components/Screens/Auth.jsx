@@ -41,7 +41,7 @@ export default function LoginPage({ navigation }) {
       if(user){
         navigation.navigate("Home")
       }
-    })
+    }) 
     return unsubscribe
   }, [])
 
