@@ -14,6 +14,7 @@ export default AppLoader
 
 const styles = StyleSheet.create({
     container: {
+<<<<<<< HEAD
       backgroundColor: "#305a82",
       shadowColor: 'black',
       height: "100%",
@@ -21,5 +22,13 @@ const styles = StyleSheet.create({
       borderTopLeftRadius: 12,
       justifyContent: 'center',
       alignItems: 'center'
+=======
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#ffffff',
+        zIndex: 1,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
     }
 })

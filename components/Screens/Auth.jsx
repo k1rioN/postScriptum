@@ -63,6 +63,7 @@ export default function LoginPage({ navigation }) {
           setUser(userData);
         }
       }
+<<<<<<< HEAD
       else if (user) {
         navigation.navigate("Home");
       }
@@ -76,6 +77,11 @@ export default function LoginPage({ navigation }) {
   }, []);
   
   
+=======
+    }) 
+    return unsubscribe
+  }, [])
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
 
   let isPressed = false;
 

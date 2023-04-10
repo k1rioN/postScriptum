@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { StyleSheet, StatusBar, Text, RefreshControl, View, Modal, FlatList, TextInput, KeyboardAvoidingView, Alert, Image, TouchableWithoutFeedback, ActivityIndicator } from 'react-native';
 import { addDoc, collection, query, where, orderBy, deleteDoc, doc, onSnapshot } from 'firebase/firestore'
+=======
+import React, { useState, useRef, useEffect  } from "react";
+import { StyleSheet, StatusBar, Text, RefreshControl, View, Modal, FlatList, TextInput, KeyboardAvoidingView, Alert } from 'react-native';
+import { addDoc, collection, doc, Firestore } from 'firebase/firestore'
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
 import { database, auth } from "../../firebase";
 import { getApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -11,12 +17,15 @@ import moment from 'moment'
 import { LogBox } from 'react-native';
 import AppLoader from "./AppLoader";
 import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
+<<<<<<< HEAD
 import { useFonts } from 'expo-font';
 import { AntDesign } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import 'firebase/storage';
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
+=======
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
 LogBox.ignoreLogs(['Warning: ...']);
 LogBox.ignoreAllLogs();
 
@@ -24,6 +33,7 @@ export default function Feed() {
   const [modalVisible, setModalVisible] = useState(false);
   const [text, setText] = useState("");
   const [postList, setPostList] = useState([]);
+<<<<<<< HEAD
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [loginPending, setLoginPending] = useState(true);
   const [currentUser, setCurrentUser] = useState();
@@ -65,6 +75,19 @@ export default function Feed() {
       setImagePrewiev(result.uri);
     }
   };
+=======
+  const [loginPending, setLoginPending] = useState(false);
+  const [refreshing, setRefreshing] = React.useState(false);
+  const lastNameRef = useRef();
+  
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  }, []);
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
 
   useEffect(() => {
     const q = query(
@@ -81,6 +104,7 @@ export default function Feed() {
     return () => unsubscribe();
   }, []);
 
+<<<<<<< HEAD
   useEffect(() => {
     const getData = async () => {
       const q = query(collection(database, "users"), where("email", "==", auth.currentUser.email));
@@ -171,6 +195,26 @@ export default function Feed() {
   const handleNav = (email, data) => {
     if(email == auth.currentUser.email) {
       navigation.navigate("Профиль")
+=======
+  const postView = {
+    height: '100%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    backgroundColor: "#ffffff",
+    paddingBottom: 100
+  }
+
+  const postCollectionRef = collection(database, "posts")
+
+  const createPost = async (url) => {
+    if(text !== "") {
+      let datetime = moment().format(); 
+      await addDoc(postCollectionRef, {text, author: {date: datetime, name: auth.currentUser.email, id: auth.currentUser.uid}}),
+      setModalVisible(!modalVisible),
+      setLoginPending(true)
+      setTitle(""),
+      setText("")
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
     }
     else {
       navigation.navigate("Другой профиль", data)
@@ -186,6 +230,7 @@ export default function Feed() {
     <>
     {loginPending ? <AppLoader /> :
     <View style={styles.container} onPress={() => setModalVisible(!modalVisible)}>
+      
       <Modal
         animationType="slide"
         visible={imageModalVisible}
@@ -213,7 +258,11 @@ export default function Feed() {
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
               <TouchableOpacity style={styles.closebutton} onPress={() => setModalVisible(false)}>
+<<<<<<< HEAD
                 <Text style={{fontWeight: 'bold', color: '#30475E', fontSize: 20}}>Закрыть</Text>
+=======
+                <Text style={{fontWeight: 'bold', color: '#30475E', fontSize: 17}}>Закрыть</Text>
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
               </TouchableOpacity>
               <Text style={{fontSize: 24, marginTop: 20, marginBottom: 10}}>Текст поста</Text>
               <TextInput
@@ -249,13 +298,21 @@ export default function Feed() {
       <TouchableOpacity style={styles.button} onPress={() => setModalVisible(!modalVisible)}>
         <Text style={{fontWeight: '700', color: '#ffffff', fontSize: 21}}>Добавить пост</Text>
       </TouchableOpacity>
+<<<<<<< HEAD
       <FlatList showsVerticalScrollIndicator={false} refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         } data={postList} renderItem={({item}) => (
+=======
+      <ScrollView style={postView} refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }>
+        <FlatList data={postList} renderItem={({item}) => (
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
         <View 
           style={{
             padding: 20,
             margin: 0,
+<<<<<<< HEAD
             backgroundColor: "#9FB1BCFF",
             borderTopLeftRadius: 12,
             borderTopRightRadius: 12,
@@ -289,6 +346,25 @@ export default function Feed() {
         </View>
       )} /> 
     </View>}
+=======
+            height: 150,
+            backgroundColor: "#9FB1BCFF",
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            borderBottomLeftRadius: 20,
+            borderBottomRightRadius: 20,
+            flexDirection: 'column', 
+            marginBottom: 5
+          }} >
+          <Text style={styles.title} >{ item.author.name }</Text>
+          <Text style={styles.text}>{ item.text }</Text>
+        </View>
+      )} />
+      </ScrollView>
+    </View>
+    {loginPending ?  <AppLoader /> : null}
+    <StatusBar barStyle={"light-content"} translucent={true}/>
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
     </>
   );
 }
@@ -299,8 +375,13 @@ const styles = StyleSheet.create({
     marginTop: 5,
     shadowColor: 'black',
     height: "100%",
+<<<<<<< HEAD
     borderTopRightRadius: 12,
     borderTopLeftRadius: 12
+=======
+    borderTopRightRadius: 20,
+    borderTopLeftRadius: 20
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
   },
   centeredView: {
     flex: 1,
@@ -340,6 +421,7 @@ const styles = StyleSheet.create({
     height: "82%",
     width: "100%",
   },
+<<<<<<< HEAD
   modal: {
     flex: 1,
     backgroundColor: "#000",
@@ -353,6 +435,8 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
     marginBottom: 70
   },
+=======
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
   inputArea: {
     backgroundColor: "#E7E7E7",
     height: 110,
@@ -404,7 +488,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 5,
+<<<<<<< HEAD
     width: 390,
+=======
+    width: 380,
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
     marginHorizontal: 12,
   },
   saveButton: {
@@ -417,6 +505,7 @@ const styles = StyleSheet.create({
     width: "100%",
     marginHorizontal: 12,
     marginTop: 15,
+<<<<<<< HEAD
     width: 390,
   },
   addImageButton: {
@@ -431,6 +520,9 @@ const styles = StyleSheet.create({
     marginTop: 15,
     width: 390,
     flexDirection: 'row'
+=======
+    width: 380,
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
   }
 });
 

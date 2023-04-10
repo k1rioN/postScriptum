@@ -1,5 +1,9 @@
 import { auth } from "../../firebase"
+<<<<<<< HEAD
 import React, { useEffect, useState } from 'react';
+=======
+import React, { useState } from 'react';
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
 import { StyleSheet, View, Text, TouchableOpacity, StatusBar, Modal, Animated, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Swiper from "react-native-screens-swiper";
@@ -24,7 +28,11 @@ const ModalPoup = ({visible, children}) => {
         useNativeDriver: true,
       }).start();
     } else {
+<<<<<<< HEAD
       setTimeout(() => setShowModal(false), 100);
+=======
+      setTimeout(() => setShowModal(false), 150);
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
       Animated.timing(scaleValue, {
         toValue: 0,
         duration: 300,
@@ -48,6 +56,8 @@ export default function Home() {
 
   const [visible, setVisible] = React.useState(false);
   const navigation = useNavigation();
+
+  const [visible, setVisible] = React.useState(false);
 
   const data = [
     {
@@ -89,7 +99,11 @@ export default function Home() {
       alignItems: 'center',
       paddingHorizontal: 2,
       marginTop: 15,
+<<<<<<< HEAD
       marginBottom: 7,
+=======
+      marginBottom: 5
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
     },
     pillActive: {
       backgroundColor: '#78A2CC',
@@ -105,7 +119,11 @@ export default function Home() {
       position: 'fixed',
       scrollableContainer: false,
       backgroundColor: '#f2f2f2',
+<<<<<<< HEAD
       color: '#30475E',
+=======
+      color: '#30475E'
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
     },
     borderActive: {
       borderColor: 'black',
@@ -129,6 +147,7 @@ export default function Home() {
     <View style={styles.container}>
       <ModalPoup visible={visible}>
         <SafeAreaView style={styles.nav}>
+<<<<<<< HEAD
           <TouchableOpacity style={{flexDirection: 'row', marginBottom: 7}} onPress={handleLogout}>
             <Ionicons name="log-out" size={32} color="#dddce1" />
             <Text style={{fontSize: 28, marginRight: 20, fontWeight: '600', color: '#dddce1', marginTop: 2, marginLeft: 5}}>Выйти</Text>
@@ -153,6 +172,28 @@ export default function Home() {
         <Text style={[styles.title, {marginTop: 2}]}>ПостСкриптум</Text>
         <TouchableOpacity onPress={() => navigation.navigate("Профиль")}>
           <Ionicons name="person" size={36} color="#dddce1" />
+=======
+          <TouchableOpacity style={{flexDirection: 'row'}} onPress={handleSingOut}>
+            <Ionicons name="log-out" size={36} color="#1b1a1d" />
+            <Text style={{fontSize: 28, marginRight: 20, fontWeight: '600'}}>Выйти</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={{flexDirection: 'row'}}>
+            <Ionicons name="cog-outline" size={36} color="#1b1a1d" />
+            <Text style={{fontSize: 28, fontWeight: '600'}}>Настройки</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+        <TouchableOpacity style={styles.closebutton} onPress={() => setVisible(false)}>
+          <Text style={{fontWeight: 'bold', color: '#30475E', fontSize: 17}}>Закрыть</Text>
+        </TouchableOpacity>
+      </ModalPoup>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => setVisible(true)}>
+          <Ionicons name="reorder-three-outline" size={36} color="#1b1a1d" />
+        </TouchableOpacity>
+        <Text style={styles.title}>ПостСкриптум</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
+          <Ionicons name="md-person" size={36} color="#1b1a1d" />
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
         </TouchableOpacity>
       </View>
       <View style={styles.content}>
@@ -169,20 +210,30 @@ export default function Home() {
     <StatusBar barStyle={"light-content"} translucent={true}/>
     </>
   );
+
+  
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+<<<<<<< HEAD
     backgroundColor: '#305a82',
   },
   nav: {
     flexDirection: 'column',
+=======
+    backgroundColor: '#ca786d',
+  },
+  nav: {
+    flexDirection: 'row',
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
     marginBottom: 30,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+<<<<<<< HEAD
     paddingHorizontal: 10,
     paddingTop: 46,
     backgroundColor: '#305a82',
@@ -193,21 +244,44 @@ const styles = StyleSheet.create({
     color: '#dddce1',
     letterSpacing: 6,
     fontWeight: '700'
+=======
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    backgroundColor: '#ca786d',
+    marginTop: 5,
+    
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1b1a1d',
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
   },
   content: {
     width: '100%',
     height: '90%',
     position: "absolute",
     bottom: 0,
+<<<<<<< HEAD
     backgroundColor: '#305a82',
+=======
+    backgroundColor: '#ca786d',
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
     justifyContent: 'center',
   },
   modalContainer: {
     width: '100%',
+<<<<<<< HEAD
     height: 285,
     backgroundColor: '#305a82',
     paddingHorizontal: 20,
     borderRadius: 12,
+=======
+    height: 225,
+    backgroundColor: '#ca786d',
+    paddingHorizontal: 20,
+    borderRadius: 20,
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
     elevation: 20,
     justifyContent: 'flex-end',
     alignItems: 'center'
@@ -215,7 +289,11 @@ const styles = StyleSheet.create({
   closebutton: {
     backgroundColor: '#88A795',
     height: 50,
+<<<<<<< HEAD
     borderRadius: 12,
+=======
+    borderRadius: 30,
+>>>>>>> 12a6539e5759d9cad48c671e74d33a7b656c2377
     justifyContent: 'center',
     alignItems: 'center',
     width: 390,
