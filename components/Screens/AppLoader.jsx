@@ -5,7 +5,7 @@ import AnimatedLottieView from 'lottie-react-native'
 const AppLoader = () => {
   return (
     <View style={[StyleSheet.absoluteFillObject, styles.container]}>
-      <AnimatedLottieView source={require('../../assets/loader.json')} autoPlay loop renderMode={"SOFTWARE"} />
+      <AnimatedLottieView style={{width: 400, height: 400}} source={require('../../assets/loader.json')} autoPlay />
     </View>
   )
 }
@@ -14,9 +14,12 @@ export default AppLoader
 
 const styles = StyleSheet.create({
     container: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#6E8898FF',
-        zIndex: 1
+      backgroundColor: "#305a82",
+      shadowColor: 'black',
+      height: "100%",
+      borderTopRightRadius: 12,
+      borderTopLeftRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center'
     }
 })

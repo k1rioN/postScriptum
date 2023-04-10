@@ -1,12 +1,14 @@
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useEffect, useState, useRef } from 'react';
 import { StatusBar, TouchableWithoutFeedback, View, TextInput, StyleSheet, TouchableOpacity, Text, Alert, Image, SafeAreaView, Animated } from 'react-native';
 import KeyboardAvoidingView, { KeyboardAvoidingViewComponent } from 'react-native/Libraries/Components/Keyboard/KeyboardAvoidingView';
-import { auth } from '../../firebase'
+import { auth, database } from '../../firebase'
 import { Keyboard } from 'react-native'
+import { collection, query, where, getDocs } from 'firebase/firestore'
 import AppLoader from './AppLoader';
 import { useFocusEffect } from '@react-navigation/native';
 import { useIsFocused } from "@react-navigation/native";
+import {signInWithEmailAndPassword} from 'firebase/auth'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const backImage = require('../../assets/Rectangle.jpg')
@@ -14,36 +16,66 @@ const backImage = require('../../assets/Rectangle.jpg')
 export default function LoginPage({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [user, setUser] = useState(null);
 
-
-  const handleLogin = () => {
-    if(email !== "" && password !== "") {
-      signInWithEmailAndPassword(auth, email, password)
-      .then(() => console.log("Login success"))
-      .catch((err) => Alert.alert("Login error", err.message));
+  const handleLogin = async () => {
+    if (email !== "" && password !== "") {
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        console.log("Login success");
+        navigation.navigate("Home");
+      } catch (err) {
+        Alert.alert("Login error", err.message);
+      }
+    } else {
+      Alert.alert("Заполните поля для входа");
     }
   };
   const keyboardOffset = useRef(new Animated.Value(10)).current;
 
   const startAnimation = (toValue) => Animated.timing(keyboardOffset, { toValue, duration: 400, useNativeDriver: true }).start();
 
-
-
-
   useEffect(() => {
     Keyboard.addListener("keyboardWillShow", () => {
       startAnimation(-80);
     });
-      Keyboard.addListener("keyboardWillHide", () => {
+    Keyboard.addListener("keyboardWillHide", () => {
       startAnimation(0);
     });
-    const unsubscribe = auth.onAuthStateChanged(user => {
-      if(user){
-        navigation.navigate("Home")
+  
+    const fetchUserData = async () => {
+      if (auth.currentUser.email) {
+        const q = query(collection(database, "users"), where("email", "==", auth.currentUser.email));      
+        const querySnapshot = await getDocs(q);
+  
+        if (querySnapshot.empty) {
+          navigation.navigate("Auth");
+          setUser(null);
+        } else {
+          const userData = querySnapshot.docs[0].data();
+          const isWelcomed = userData.isWelcomed;
+  
+          if (isWelcomed === false) {
+            navigation.navigate("Welcome");
+          } else {
+            navigation.navigate("Home");
+          }
+          setUser(userData);
+        }
       }
-    })
-    return unsubscribe
-  }, [])
+      else if (user) {
+        navigation.navigate("Home");
+      }
+      else {
+        navigation.navigate("Auth");
+        setUser(null);
+      }
+    };
+  
+    fetchUserData();
+  }, []);
+  
+  
 
   let isPressed = false;
 
@@ -144,7 +176,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#5687a6',
     height: 58,
-    borderRadius: 10,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 18,

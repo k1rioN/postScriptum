@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { StyleSheet, StatusBar, Text, RefreshControl, View, Modal, FlatList, TextInput, KeyboardAvoidingView, Alert, Image, TouchableWithoutFeedback, ActivityIndicator } from 'react-native';
+import { StyleSheet, StatusBar, Text, RefreshControl, View, Modal, FlatList, TextInput, KeyboardAvoidingView, Alert, Image, TouchableWithoutFeedback } from 'react-native';
 import { addDoc, collection, query, where, orderBy, deleteDoc, doc, onSnapshot } from 'firebase/firestore'
 import { database, auth } from "../../firebase";
 import { getApp } from "firebase/app";
@@ -20,66 +20,54 @@ import { SafeAreaView } from "react-native-safe-area-context";
 LogBox.ignoreLogs(['Warning: ...']);
 LogBox.ignoreAllLogs();
 
-export default function Feed() {
-  const [modalVisible, setModalVisible] = useState(false);
+export default function FriendsPosts() {
   const [text, setText] = useState("");
   const [postList, setPostList] = useState([]);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [loginPending, setLoginPending] = useState(true);
   const [currentUser, setCurrentUser] = useState();
   const [refreshing, setRefreshing] = React.useState(false);
-  const [image, setImage] = useState(null);
-  const [imagePrewiev, setImagePrewiev] = useState(null);
+  const [friendEmails, setFriendEmails] = useState([auth.currentUser.email]);
   const [data, setData] = useState([]);
   const [showFullText, setShowFullText] = useState(false);
   const [imgUrl, setImgUrl] = useState(null);
-  const lastNameRef = useRef();
-  const storage = getStorage();
   const navigation = useNavigation();
   const postCollectionRef = collection(database, "posts");
 
-  const onRefresh = React.useCallback(async () => {
-    setRefreshing(true);
-    const querySnapshot = await getDocs(
-      query(postCollectionRef, orderBy("author.date", "desc"))
-    );
-    const postListData = querySnapshot.docs.map((doc) => ({
-      ...doc.data(),
-      id: doc.id,
-    }));
-    setPostList(postListData);
-    setRefreshing(false);
-  }, []);
-
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-    if (result.uri) {
-      const source = { uri: result.uri };
-      console.log(source);
-      setImage(source);
-      setImagePrewiev(result.uri);
-    }
-  };
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(
-      collection(database, "posts"),
-      where("author.email", "==", auth.currentUser.email),
-      orderBy("author.date", "desc")
-    );
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      setPostList(
-        querySnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }))
-      );
-    });
-  
-    return () => unsubscribe();
+    const getFriendEmails = async () => {
+      const q = query(collection(database, "users"), where("email", "==", auth.currentUser.email));
+      const querySnapshot = await getDocs(q);
+      const userData = querySnapshot.docs.map(doc => doc.data());
+      if (userData.length > 0) {
+        setFriendEmails(userData[0].friendsList.map(friend => friend.email));
+      } else {
+        setFriendEmails([auth.currentUser.email]);
+      }
+      setLoading(false);
+    };
+    getFriendEmails();
   }, []);
+  
+  // В запросах проверяем, что массив friendEmails заполнен
+  useEffect(() => {
+    if (!loading && friendEmails.length > 0) {
+      const q = query(
+        collection(database, "posts"),
+        where("author.email", "in", friendEmails),
+        orderBy("author.date", "desc")
+      );
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        setPostList(
+          querySnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }))
+        );
+      });
+      return () => unsubscribe();
+    }
+  }, [loading, friendEmails]);
+  
 
   useEffect(() => {
     const getData = async () => {
@@ -88,13 +76,8 @@ export default function Feed() {
       const userData = querySnapshot.docs.map(doc => doc.data());
       setData(userData);
     };
-  
-    const interval = setInterval(() => {
-      getData();
-    }, 1000)
-  
-    return () => clearInterval(interval);
-  }, []);  
+    getData();
+  }, []);
 
   useEffect(() => {
     if (data.length > 0) {
@@ -103,53 +86,27 @@ export default function Feed() {
   }, [data]);
 
   useEffect(() => {
-      const getPosts = async () => {
-        const querySnapshot = await getDocs(
-          query(postCollectionRef, orderBy("author.date", "desc"))
-        );
+    if (!loading && friendEmails.length > 0) {
+    const unsubscribe = onSnapshot(
+      query(postCollectionRef, where("author.email", "in", friendEmails), orderBy("author.date", "desc")),
+      (querySnapshot) => {
         const postData = querySnapshot.docs.map((doc) => ({
           ...doc.data(),
           id: doc.id,
         }));
         setPostList(postData);
         setLoginPending(false);
-      };
-      getPosts();
-    }, [data])
-
-
-  const createPost = async () => {
-    if (text !== "") {
-      const datetime = moment().format();
-      let img = null;
-      if (image) {
-        const response = await fetch(image.uri);
-        const blob = await response.blob();
-        const filename = image.uri.substring(image.uri.lastIndexOf("/") + 1);
-        const imgToUpload = `images/${filename}`;
-        const storageRef = ref(storage, imgToUpload);
-        await uploadBytes(storageRef, blob);
-        img = await getDownloadURL(storageRef);
       }
-      await addDoc(postCollectionRef, {
-        text,
-        img,
-        author: {
-          date: datetime,
-          email: auth.currentUser.email,
-          id: auth.currentUser.uid,
-          name: currentUser,
-        },
-      });
-      setModalVisible(false);
-      setText("");
-      setImagePrewiev(null);
-      setImage(null);
-      onRefresh();
-    } else {
-      Alert.alert("Заполните все поля");
+    );
+    
+    // Отписка от подписки на изменения Firestore
+    return () => unsubscribe();
     }
-  };
+    else {
+      setLoginPending(false);
+    }
+  }, [friendEmails]);
+  
 
   useEffect(() => {
     if (imgUrl) {
@@ -185,73 +142,12 @@ export default function Feed() {
   return (
     <>
     {loginPending ? <AppLoader /> :
-    <View style={styles.container} onPress={() => setModalVisible(!modalVisible)}>
-      <Modal
-        animationType="slide"
-        visible={imageModalVisible}
-        onRequestClose={() => setImageModalVisible(false)}
-      >
-        <SafeAreaView style={styles.modal}>
-          <TouchableOpacity
-            style={styles.closeBttn}
-            onPress={() => setImageModalVisible(false)}
-          >
-            <AntDesign name="closecircle" size={45} color="#fff" />
-          </TouchableOpacity>
-          <Image
-            style={styles.modalImage}
-            source={{ uri: imgUrl }}
-          />
-        </SafeAreaView>
-      </Modal>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        >
-          <>
-          <View style={styles.centeredView}>
-            <View style={styles.modalView}>
-              <TouchableOpacity style={styles.closebutton} onPress={() => setModalVisible(false)}>
-                <Text style={{fontWeight: 'bold', color: '#30475E', fontSize: 20}}>Закрыть</Text>
-              </TouchableOpacity>
-              <Text style={{fontSize: 24, marginTop: 20, marginBottom: 10}}>Текст поста</Text>
-              <TextInput
-                style={styles.inputArea}
-                multiline={true}
-                autoCorrect={false}
-                ref={lastNameRef}
-                onChangeText={(text) => setText(text)}
-                value={text}
-                autoFocus={true}
-              />
-              <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
-                <AntDesign name="picture" size={24} color="white" />
-                <Text style={{fontWeight: 'bold', color: '#fff', fontSize: 17, marginLeft: 10}}>Выбрать фото</Text>
-              </TouchableOpacity>
-              {imagePrewiev ? (
-                <>
-                <View style={{flexDirection: 'column'}}>
-                  <TouchableOpacity onPress={() => setImagePrewiev(null)} style={{alignSelf: 'center', marginTop: 10}}>
-                    <Text style={{fontSize: 19, color: '#f97c7c', fontWeight: '500'}}>Удалить изображение</Text>
-                  </TouchableOpacity>
-                  <Image source={{ uri: imagePrewiev }} style={styles.image} />
-                </View>
-                </>
-              ) : null}
-              <TouchableOpacity style={styles.saveButton} onPress={createPost}>
-                <Text style={{fontWeight: 'bold', color: '#fff', fontSize: 17}}>Опубликовать</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-          </>
-      </Modal>
-      <TouchableOpacity style={styles.button} onPress={() => setModalVisible(!modalVisible)}>
-        <Text style={{fontWeight: '700', color: '#ffffff', fontSize: 21}}>Добавить пост</Text>
-      </TouchableOpacity>
-      <FlatList showsVerticalScrollIndicator={false} refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        } data={postList} renderItem={({item}) => (
+    <View style={styles.container}>
+      <View style={{flexDirection: 'row', justifyContent: 'center'}}>
+        <Text style={{fontSize: 20, marginTop: 5, fontWeight: '500'}}>Обновления ваших </Text>
+        <Text onPress={() => navigation.navigate("Друзья")} style={{fontSize: 20, marginTop: 5, fontWeight: '500', color: '#f97c7c'}}>друзей</Text>
+      </View>
+      {postList ? <FlatList style={{marginTop: 5}} showsVerticalScrollIndicator={false} data={postList} renderItem={({item}) => (
         <View 
           style={{
             padding: 20,
@@ -287,7 +183,7 @@ export default function Feed() {
               <Image source={{ uri: item.img }} style={{height: 380, width: "100%", borderRadius: 20, resizeMode: 'cover'}} />
             </TouchableWithoutFeedback> : null}
         </View>
-      )} /> 
+      )} /> : null}
     </View>}
     </>
   );
@@ -306,6 +202,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-end',
+    zIndex: 1000,
   },
   showMoreButton: {
     backgroundColor: '#78A2CC',
@@ -368,7 +265,7 @@ const styles = StyleSheet.create({
     height: 200,
     resizeMode: 'contain',
     margin: 10,
-    borderRadius: 20,
+    borderRadius: 20
   },
   colorPickerContainer: {
     height: 100,

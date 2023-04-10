@@ -1,23 +1,31 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { StatusBar, TouchableWithoutFeedback, View, TextInput, StyleSheet, TouchableOpacity, Text, Alert, Image, SafeAreaView, Animated } from 'react-native';
 import KeyboardAvoidingView from 'react-native/Libraries/Components/Keyboard/KeyboardAvoidingView';
-import { auth } from '../../firebase'
+import { auth, database } from '../../firebase'
 import { Keyboard } from 'react-native'
+import { addDoc, collection, doc, setDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { useNavigation } from '@react-navigation/native';
 
 
 const backImage = require('../../assets/Rectangle.jpg')
 
-export default function RegisterPage({ navigation }) {
+export default function RegisterPage() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const nameId = 'user' + name.replace(/ /g,'');
+  const newId = toString(Math.floor(Math.random() * (9999 - 1000 + 1)))
+  const navigation = useNavigation();
 
   const handleRegister = () => {
     if(email !== "" && password !== "" && password === confirmPassword) {
       createUserWithEmailAndPassword(auth, email, password)
       .then(() => console.log("Registration success"))
+      .then(navigation.navigate('Welcome'))
       .catch((err) => Alert.alert("Registration error", err.message));
+      setDoc(doc(database, 'users', nameId), {name, email, friendsList: [], friendsRequest: [], isWelcomed: false})
     }
   };
 
@@ -26,26 +34,21 @@ export default function RegisterPage({ navigation }) {
   const startAnimation = (toValue) =>
   Animated.timing(keyboardOffset, { toValue, duration: 300 }).start();
 
-useEffect(() => {
-  // start the animation when the keyboard appears
-  Keyboard.addListener("keyboardWillShow", (e) => {
-    // use the height of the keyboard (negative because the translateY moves upward)
-    startAnimation(-80);
-  });
-  // perform the reverse animation back to keyboardOffset initial value: 0
-  Keyboard.addListener("keyboardWillHide", () => {
-    startAnimation(0);
-  });
-  return () => {
-    // remove listeners to avoid memory leak
-  };
-}, []);
+  useEffect(() => {
+    Keyboard.addListener("keyboardWillShow", (e) => {
+      startAnimation(-70);
+    });
+    Keyboard.addListener("keyboardWillHide", () => {
+      startAnimation(0);
+    });
+    return () => {
+    };
+  }, []);
 
   const moveToAuth = () => {
     navigation.navigate('Auth')
   };
   
-
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
     <View style={styles.container} >
@@ -54,8 +57,16 @@ useEffect(() => {
       <SafeAreaView style={styles.form} onPress={() => Keyboard.dismiss()}>
       <Animated.View style={{ transform: [{ translateY: keyboardOffset }] }}>
         <Text style={styles.title}>Регистрация</Text>
-          
             <View>
+              <TextInput
+                    style={styles.input}
+                    placeholder="Имя"
+                    autoCapitalize="none"
+                    textContentType="emailAddress"
+                    value={name}
+                    autoCorrect={false}
+                    onChangeText={(text) => setName(text)}
+                />
               
                <TextInput
                   style={styles.input}
@@ -78,6 +89,7 @@ useEffect(() => {
                   value={password}
                   onChangeText={(text) => setPassword(text)}
                 />
+
                 <TextInput
                   style={styles.input}
                   placeholder="Повторить пароль"
@@ -107,6 +119,7 @@ useEffect(() => {
     </TouchableWithoutFeedback>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -138,7 +151,7 @@ const styles = StyleSheet.create({
   },
   whiteSheet: {
     width: '100%',
-    height: '82%',
+    height: '83%',
     position: "absolute",
     bottom: 0,
     backgroundColor: '#fff',
@@ -158,5 +171,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 2,
   },
-
 });

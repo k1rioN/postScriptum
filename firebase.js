@@ -8,16 +8,16 @@ import { getFirestore } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyA_L0hhZdRabfj5VLTj8a10hP5rRhGSrhs",
-  authDomain: "psapp-610d9.firebaseapp.com",
-  projectId: "psapp-610d9",
-  storageBucket: "psapp-610d9.appspot.com",
-  messagingSenderId: "832378079131",
-  appId: "1:832378079131:web:10b820ac63ca59937ec33e"
+  apiKey: "AIzaSyAbon11I710cZ1X_L4LpQiDLQiA5qhIOZc",
+  authDomain: "socialapp-ad261.firebaseapp.com",
+  projectId: "socialapp-ad261",
+  storageBucket: "socialapp-ad261.appspot.com",
+  messagingSenderId: "767783112702",
+  appId: "1:767783112702:web:319863696c723561b93aaf"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const auth =  getAuth();
-export const storage = getStorage();
+export const storage = getStorage(app);
 export const database = getFirestore();
